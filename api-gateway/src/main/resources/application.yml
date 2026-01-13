@@ -1,0 +1,27 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      mvc:
+        routes:
+          - id: user-service
+            uri: ${BASE_URL_USER_SVC}
+            predicates:
+              - Path=/api/v1/users/**
+          - id: group-service
+            uri: ${BASE_URL_GROUP_SVC}
+            predicates:
+              - Path=/api/v1/groups/**
+          - id: task-service
+            uri: ${BASE_URL_TASK_SVC}
+            predicates:
+              - Path=/api/v1/tasks/**
+          - id: notification-service
+            uri: ${BASE_URL_NOTIFICATION_SVC}
+            predicates:
+              - Path=/api/v1/notifications/**ád

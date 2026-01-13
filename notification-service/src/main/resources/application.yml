@@ -1,0 +1,10 @@
+server:
+  port: 4444
+
+spring:
+  application:
+    name: notification-service
+
+logging:
+  level:
+    root: INFO

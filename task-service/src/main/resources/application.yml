@@ -1,0 +1,28 @@
+server:
+  port: 3333
+
+spring:
+  application:
+    name: task-service
+
+  datasource:
+    url: ${SERVER_DATASOURCE_URL}
+    username: ${SERVER_DATASOURCE_USERNAME}
+    password: ${SERVER_DATASOURCE_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+    hikari:
+      maximum-pool-size: ${SERVER_DATASOURCE_MAXIMUM_POOL_SIZE}
+      minimum-idle: ${SERVER_DATASOURCE_MINIMUM_IDLE}
+      connection-timeout: ${SERVER_DATASOURCE_CONNECTION_TIMEOUT}
+
+mybatis:
+  config-location: classpath:mybatis/mybatis-config.xml
+  mapper-locations: classpath:mybatis/mappers/*.xml
+
+logging:
+  level:
+    root: INFO
+    org.mybatis: DEBUG
+    org.apache.ibatis: DEBUG
+    com.cloud.work.mapper: DEBUG
