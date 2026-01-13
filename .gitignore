@@ -26,3 +26,7 @@ replay_pid*
 # Build outputs
 target/
 bin/
+
+# IntelliJ IDEA
+.idea/
+*.iml
