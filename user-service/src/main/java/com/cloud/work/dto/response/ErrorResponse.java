@@ -10,11 +10,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class LoginResponse implements Serializable {
-    String role;
-    String email;
-    String accessToken;
-    long expireAccessToken;
-    String refreshToken;
-    long expireRefreshToken;
+public class ErrorResponse implements Serializable {
+    String code;
+    String message;
 }
