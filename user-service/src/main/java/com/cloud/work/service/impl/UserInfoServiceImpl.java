@@ -31,11 +31,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +56,8 @@ public class UserInfoServiceImpl implements UserInfoService {
     private final AuthenticationManager authenticationManager;
     private final SystemParameterService systemParameterService;
     private final MessageTemplateService messageTemplateService;
+    private final RedisTemplate<String, String> redisTemplate;
+    private static final Duration OTP_TTL = Duration.ofMinutes(2);
 
     @Override
     public UserInfo getUserInfoByEmail(String email) {
@@ -83,9 +87,12 @@ public class UserInfoServiceImpl implements UserInfoService {
             MessageTemplate messageTemplate = messageTemplateService.getByTypeAndLanguage("UG001", LanguageUtils.getCurrentLanguage());
 
             params.clear();
-            params.put("%otpNum%", OtpUtils.generateOtp());
+            String generateOtp = OtpUtils.generateOtp();
+            params.put("%otpNum%", generateOtp);
             params.put("%fullName%", userInfo.getFullName());
             params.put("%otpExpireMinutes%", systemParameter.getValue());
+            // save otp redis and save time
+            redisTemplate.opsForValue().set(userRegisterRequest.getEmail(), generateOtp, OTP_TTL);
 
             String title = messageTemplate.getTitle();
             String content = StringUtils.messageReplace(messageTemplate.getContent(), params);
