@@ -1,6 +1,7 @@
 package com.cloud.work.entity;
 
 import com.cloud.work.entity.base.BaseEntity;
+import com.cloud.work.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -26,11 +27,12 @@ public class UserInfo extends BaseEntity implements Serializable {
     @Column(name = "status")
     String status;
 
-    @Column(name = "email")
+    @Column(name = "email", unique = true)
     String email;
 
     @Column(name = "role")
-    String role;
+    @Enumerated(EnumType.STRING)
+    Role role;
 
     @Column(name = "password")
     String password;
