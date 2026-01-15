@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface UserInfoRepository extends JpaRepository<UserInfo, Long> {
+    UserInfo findByEmail(String email);
     boolean existsByEmail(String email);
     @Modifying
     @Transactional

@@ -40,11 +40,11 @@ public class UserInfoServiceImpl implements UserInfoService {
     private final MessageTemplateService messageTemplateService;
     private final RedisTemplate<String, String> redisTemplate;
     private static final Duration OTP_TTL = Duration.ofMinutes(2);
-    @Override
-    public boolean getUserInfoByEmail(String email) {
-        return userInfoRepository.existsByEmail(email);
-    }
 
+    @Override
+    public UserInfo getUserInfoByEmail(String email) {
+        return userInfoRepository.findByEmail(email);
+    }
     @Override
     public AppResponse registerUser(UserRegisterRequest userRegisterRequest) {
         try {
