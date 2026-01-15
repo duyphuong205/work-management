@@ -25,20 +25,21 @@ public class OtpServiceImpl implements OtpService {
     private final UserInfoRepository userInfoRepository;
     private final RedisTemplate<String, String> redisTemplate;
 
+    @Override
     public AppResponse verifyOtp(VerifyUserRequest verifyUserRequest) {
         try {
             String otpValue = redisTemplate.opsForValue().get(verifyUserRequest.getEmail());
             if (StringUtils.isEmpty(otpValue)) {
-                throw new BusinessException(AppConstants.RES_FAIL_CODE, MessageUtils.getMessage(MessageConstants.MSG_VERIFY_OTP_EXPIRED), 410);
+                throw new BusinessException(AppConstants.RES_FAIL_CODE, MessageUtils.getMessage(MessageConstants.MSG_VERIFY_OTP_EXPIRED), 400);
             }
-            boolean check = otpValue.equals(verifyUserRequest.getOtp());
-            if (check) {
-                userInfoRepository.updateStatusByEmail(verifyUserRequest.getEmail(), Status.ACTV.name());
-                redisTemplate.delete(otpValue);
+            if (!otpValue.equals(verifyUserRequest.getOtp())) {
+                throw new BusinessException(AppConstants.RES_INVALID_CODE, MessageUtils.getMessage(MessageConstants.MSG_VERIFY_OTP_INVALID), 400);
             }
+            userInfoRepository.updateStatusByEmail(verifyUserRequest.getEmail(), Status.ACTV.name());
+            redisTemplate.delete(otpValue);
             return AppResponse.builder()
                     .code(AppConstants.RES_SUCCESS_CODE)
-                    .message(MessageUtils.getMessage(MessageConstants.MSG_LOGIN_SUCCESS))
+                    .message(MessageUtils.getMessage(MessageConstants.MSG_VERIFY_ACCOUNT_SUCCESS))
                     .build();
         } catch (Exception ex) {
             log.error(">>>OtpServiceImpl verifyOtp() ERROR", ex);
