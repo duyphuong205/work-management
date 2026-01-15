@@ -3,6 +3,7 @@ create table user_info (
     full_name nvarchar(100),
     email varchar(100) unique,
     password varchar(150),
+    role varchar(10),
     status varchar(4),
     created_by bigint,
     created_time timestamp,

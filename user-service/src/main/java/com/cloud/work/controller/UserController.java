@@ -23,10 +23,10 @@ public class UserController {
         AppResponse appResponse = userInfoService.registerUser(userRegisterRequest);
         return new ResponseEntity<>(appResponse, HttpStatus.CREATED);
     }
-    @PostMapping("/verify-otp")
-    public ResponseEntity<?> verifyOtp(@RequestBody VerifyUserRequest verifyUserRequest) {
-        AppResponse appResponse = otpService.verifyOtp(verifyUserRequest);
-        return new ResponseEntity<>(appResponse, HttpStatus.CREATED);
-    }
 
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> doVerifyOtp(@RequestBody VerifyUserRequest verifyUserRequest) {
+        AppResponse appResponse = otpService.verifyOtp(verifyUserRequest);
+        return new ResponseEntity<>(appResponse, HttpStatus.OK);
+    }
 }

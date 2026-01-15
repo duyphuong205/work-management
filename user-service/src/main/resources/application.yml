@@ -6,20 +6,20 @@ spring:
     name: user-service
 
   datasource:
-    url: ${SERVER_DATASOURCE_URL}
-    username: ${SERVER_DATASOURCE_USERNAME}
-    password: ${SERVER_DATASOURCE_PASSWORD}
+    url: jdbc:mysql://localhost:3306/workflow_management?allowPublicKeyRetrieval=true&useSSL=false&createDatabaseIfNotExist=true
+    username: root
+    password: 111111
     driver-class-name: com.mysql.cj.jdbc.Driver
 
     hikari:
-      maximum-pool-size: ${SERVER_DATASOURCE_MAXIMUM_POOL_SIZE}
-      minimum-idle: ${SERVER_DATASOURCE_MINIMUM_IDLE}
-      connection-timeout: ${SERVER_DATASOURCE_CONNECTION_TIMEOUT}
+      maximum-pool-size: ${SERVER_DATASOURCE_MAXIMUM_POOL_SIZE:10}
+      minimum-idle: ${SERVER_DATASOURCE_MINIMUM_IDLE:5}
+      connection-timeout: ${SERVER_DATASOURCE_CONNECTION_TIMEOUT:180000}
 
   jpa:
     database-platform: org.hibernate.dialect.MySQL8Dialect
     hibernate:
-      ddl-auto: ${SERVER_DATASOURCE_DDL}
+      ddl-auto: ${SERVER_DATASOURCE_DDL:none}
     show-sql: true
 
   data:
@@ -30,8 +30,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${SERVER_EMAIL_USERNAME}
-    password: ${SERVER_EMAIL_PASSWORD}
+    username: ${SERVER_EMAIL_USERNAME:animeshop2462@gmail.com}
+    password: ${SERVER_EMAIL_PASSWORD:yewnokvitnurtcsa}
     properties:
       mail:
         smtp:
@@ -40,7 +40,7 @@ spring:
             enable: true
 app:
   mail:
-    from: ${SERVER_EMAIL_FROM}
+    from: ${SERVER_EMAIL_FROM:animeshop2462@gmail.com}
 
 jwt:
   secret: "CHANGE_ME_TO_A_LONG_RANDOM_SECRET_AT_LEAST_32_CHARS"

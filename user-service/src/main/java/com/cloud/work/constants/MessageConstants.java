@@ -29,5 +29,7 @@ public class MessageConstants {
     public static final String MSG_ACCOUNT_ALREADY_EXISTS   = "msg.account.already.exists";
 
     //Register user
-    public static final String MSG_REGISTER_PENDING_ACTIVATION = "msg.register.pending.activation";
+    public static final String MSG_REGISTER_PENDING_ACTIVATION  = "msg.register.pending.activation";
+    public static final String MSG_VERIFY_OTP_EXPIRED           = "msg.verify.otp.expired";
+    public static final String MSG_VERIFY_ACCOUNT_SUCCESS       = "msg.verify.account.success";
 }

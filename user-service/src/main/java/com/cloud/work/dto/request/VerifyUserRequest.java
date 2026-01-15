@@ -12,5 +12,5 @@ import java.io.Serializable;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class VerifyUserRequest implements Serializable {
     String email;
-    String code;
+    String otp;
 }
