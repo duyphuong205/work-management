@@ -1,4 +1,4 @@
-package com.cloud.work.dto.response;
+package com.cloud.work.dto.request;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -10,9 +10,6 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class LoginResponse implements Serializable {
-    String accessToken;
-    long expireAccessToken;
+public class RefreshTokenRequest implements Serializable {
     String refreshToken;
-    long expireRefreshToken;
 }

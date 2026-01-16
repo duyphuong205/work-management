@@ -42,9 +42,15 @@ app:
   mail:
     from: ${SERVER_EMAIL_FROM}
 
-jwt:
-  secret: "CHANGE_ME_TO_A_LONG_RANDOM_SECRET_AT_LEAST_32_CHARS"
-  expiration-ms: 86400000
+  jwt:
+    secret:
+      key: ${SERVER_JWT_SECRET_KEY}
+    access:
+      token:
+        expiration: ${SERVER_JWT_ACCESS_TOKEN_EXPIRATION}
+    refresh:
+      token:
+        expiration: ${SERVER_JWT_REFRESH_TOKEN_EXPIRATION}
 
 logging:
   level:

@@ -2,6 +2,7 @@ package com.cloud.work.security;
 
 import com.cloud.work.entity.UserInfo;
 import com.cloud.work.enums.Status;
+import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,16 +10,13 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 
+@Data
 public class CustomUserDetails implements UserDetails {
 
     private final UserInfo userInfo;
 
     public CustomUserDetails(UserInfo userInfo) {
         this.userInfo = userInfo;
-    }
-
-    public String getRole() {
-        return userInfo.getRole().name();
     }
 
     @Override

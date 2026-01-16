@@ -10,7 +10,6 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class LoginRequest implements Serializable {
-    String email;
-    String password;
+public class LogoutRequest implements Serializable {
+    String token;
 }
