@@ -1,15 +1,10 @@
 package com.cloud.work.exception;
 
-import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
-@Getter
-public class BusinessException extends RuntimeException {
-    private final String code;
-    private final int httpStatus;
+public class BusinessException extends BaseException {
 
-    public BusinessException(String code, String message, int httpStatus) {
-        super(message);
-        this.code = code;
-        this.httpStatus = httpStatus;
+    public BusinessException(String code, String message) {
+        super(HttpStatus.OK, code, message);
     }
 }

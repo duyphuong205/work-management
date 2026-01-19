@@ -6,19 +6,13 @@ import com.cloud.work.enums.Status;
 import com.cloud.work.repository.TokenHistoryRepository;
 import com.cloud.work.service.TokenHistoryService;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaUpdate;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -53,7 +47,19 @@ public class TokenHistoryServiceImpl implements TokenHistoryService {
 
     @Override
     public boolean isValidToken(String token) {
-        return tokenHistoryRepository.countByToken(token) > 0;
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Long> builderQueryCount = criteriaBuilder.createQuery(Long.class);
+        Root<TokenHistory> root = builderQueryCount.from(TokenHistory.class);
+
+        Map<String, Object> map = new HashMap<>();
+        map.put(FieldConstants.TOKEN, token);
+        map.put(FieldConstants.STATUS, Status.NEWR.name());
+
+        Predicate[] arrPredicate = addQueryCondition(criteriaBuilder, root, map);
+
+        builderQueryCount.select(criteriaBuilder.count(root)).where(arrPredicate);
+        long record = entityManager.createQuery(builderQueryCount).getSingleResult();
+        return record > 0;
     }
 
     private Predicate[] addQueryCondition(CriteriaBuilder criteriaBuilder, Root<?> root, Map<String, Object> params) {
@@ -64,6 +70,8 @@ public class TokenHistoryServiceImpl implements TokenHistoryService {
             switch (key) {
                 case FieldConstants.TOKEN ->
                         predicates.add(criteriaBuilder.equal(root.get(FieldConstants.TOKEN), params.get(key)));
+                case FieldConstants.STATUS ->
+                        predicates.add(criteriaBuilder.equal(root.get(FieldConstants.STATUS), params.get(key)));
                 case FieldConstants.USER_ID ->
                         predicates.add(criteriaBuilder.equal(root.get(FieldConstants.USER_ID), Long.parseLong((String) params.get(key))));
             }

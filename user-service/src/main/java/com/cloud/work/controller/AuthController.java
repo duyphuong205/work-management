@@ -1,10 +1,10 @@
 package com.cloud.work.controller;
 
 import com.cloud.work.dto.request.LoginRequest;
-import com.cloud.work.dto.request.LogoutRequest;
 import com.cloud.work.dto.request.RefreshTokenRequest;
 import com.cloud.work.dto.response.AppResponse;
 import com.cloud.work.service.UserInfoService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +21,7 @@ public class AuthController {
     private final UserInfoService userInfoService;
 
     @PostMapping("/auth")
-    public ResponseEntity<?> doLogin(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> doLogin(@Valid @RequestBody LoginRequest loginRequest) {
         AppResponse appResponse = userInfoService.authentication(loginRequest);
         return new ResponseEntity<>(appResponse, HttpStatus.OK);
     }
@@ -33,8 +33,8 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> doLogout(@RequestBody LogoutRequest logoutRequest) {
-        AppResponse appResponse = userInfoService.logout(logoutRequest);
+    public ResponseEntity<?> doLogout() {
+        AppResponse appResponse = userInfoService.logout();
         return new ResponseEntity<>(appResponse, HttpStatus.OK);
     }
 }

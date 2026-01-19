@@ -27,23 +27,19 @@ public class OtpServiceImpl implements OtpService {
 
     @Override
     public AppResponse verifyOtp(VerifyUserRequest verifyUserRequest) {
-        try {
-            String otpValue = redisTemplate.opsForValue().get(verifyUserRequest.getEmail());
-            if (StringUtils.isEmpty(otpValue)) {
-                throw new BusinessException(AppConstants.RES_FAIL_CODE, MessageUtils.getMessage(MessageConstants.MSG_VERIFY_OTP_EXPIRED), 400);
-            }
-            if (!otpValue.equals(verifyUserRequest.getOtp())) {
-                throw new BusinessException(AppConstants.RES_INVALID_CODE, MessageUtils.getMessage(MessageConstants.MSG_VERIFY_OTP_INVALID), 400);
-            }
-            userInfoRepository.updateStatusByEmail(verifyUserRequest.getEmail(), Status.ACTV.name());
-            redisTemplate.delete(otpValue);
-            return AppResponse.builder()
-                    .code(AppConstants.RES_SUCCESS_CODE)
-                    .message(MessageUtils.getMessage(MessageConstants.MSG_VERIFY_ACCOUNT_SUCCESS))
-                    .build();
-        } catch (Exception ex) {
-            log.error(">>>OtpServiceImpl verifyOtp() ERROR", ex);
-            throw new BusinessException(AppConstants.RES_FAIL_CODE, MessageUtils.getMessage(MessageConstants.MSG_SYSTEM_ERROR), 500);
+        String email = verifyUserRequest.getEmail();
+        String otpValue = redisTemplate.opsForValue().get(email);
+        if (StringUtils.isEmpty(otpValue)) {
+            throw new BusinessException(AppConstants.RES_FAIL_CODE, MessageUtils.getMessage(MessageConstants.MSG_VERIFY_OTP_EXPIRED));
         }
+        if (!otpValue.equals(verifyUserRequest.getOtp())) {
+            throw new BusinessException(AppConstants.RES_INVALID_CODE, MessageUtils.getMessage(MessageConstants.MSG_VERIFY_OTP_INVALID));
+        }
+        userInfoRepository.updateStatusByEmail(email, Status.ACTV.name());
+        redisTemplate.delete(otpValue);
+        return AppResponse.builder()
+                .code(AppConstants.RES_SUCCESS_CODE)
+                .message(MessageUtils.getMessage(MessageConstants.MSG_VERIFY_ACCOUNT_SUCCESS))
+                .build();
     }
 }

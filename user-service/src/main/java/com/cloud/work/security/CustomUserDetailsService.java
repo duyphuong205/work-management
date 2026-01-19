@@ -3,7 +3,7 @@ package com.cloud.work.security;
 import com.cloud.work.constants.AppConstants;
 import com.cloud.work.constants.MessageConstants;
 import com.cloud.work.entity.UserInfo;
-import com.cloud.work.exception.BusinessException;
+import com.cloud.work.exception.NotFoundException;
 import com.cloud.work.repository.UserInfoRepository;
 import com.cloud.work.utils.MessageUtils;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         UserInfo userInfo = userInfoRepository.findByEmail(email).orElseThrow(() ->
-                new BusinessException(AppConstants.RES_FAIL_CODE, MessageUtils.getMessage(MessageConstants.MSG_ACCOUNT_NOT_FOUND), 404));
+                new NotFoundException(AppConstants.RES_NOT_FOUND_CODE, MessageUtils.getMessage(MessageConstants.MSG_ACCOUNT_NOT_FOUND)));
         return new CustomUserDetails(userInfo);
     }
 }

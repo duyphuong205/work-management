@@ -4,7 +4,6 @@ import com.cloud.work.constants.AppConstants;
 import com.cloud.work.constants.FieldConstants;
 import com.cloud.work.constants.MessageConstants;
 import com.cloud.work.dto.request.LoginRequest;
-import com.cloud.work.dto.request.LogoutRequest;
 import com.cloud.work.dto.request.RefreshTokenRequest;
 import com.cloud.work.dto.request.UserRegisterRequest;
 import com.cloud.work.dto.response.AppResponse;
@@ -17,6 +16,7 @@ import com.cloud.work.entity.UserInfo;
 import com.cloud.work.enums.Role;
 import com.cloud.work.enums.Status;
 import com.cloud.work.exception.BusinessException;
+import com.cloud.work.exception.NotFoundException;
 import com.cloud.work.jwt.JwtUtils;
 import com.cloud.work.repository.UserInfoRepository;
 import com.cloud.work.security.CustomUserDetails;
@@ -28,19 +28,20 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
-import java.util.*;
 import java.time.Duration;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -50,6 +51,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 
     private final JwtUtils jwtUtils;
     private final MailService mailService;
+    private final HttpServletRequest request;
     private final EntityManager entityManager;
     private final PasswordEncoder passwordEncoder;
     private final UserInfoRepository userInfoRepository;
@@ -63,93 +65,90 @@ public class UserInfoServiceImpl implements UserInfoService {
     @Override
     public UserInfo getUserInfoByEmail(String email) {
         return userInfoRepository.findByEmail(email).orElseThrow(() ->
-                new BusinessException(AppConstants.RES_FAIL_CODE, MessageUtils.getMessage(MessageConstants.MSG_ACCOUNT_NOT_FOUND), 404));
+                new NotFoundException(AppConstants.RES_NOT_FOUND_CODE, MessageUtils.getMessage(MessageConstants.MSG_ACCOUNT_NOT_FOUND)));
     }
 
     @Override
     public AppResponse registerUser(UserRegisterRequest userRegisterRequest) {
+        String email = userRegisterRequest.getEmail();
+        String fullName = userRegisterRequest.getFullName();
+
         Map<String, Object> params = new HashMap<>();
+        params.put("email", email);
         params.put("status", Status.ACTV.name());
-        params.put("email", userRegisterRequest.getEmail());
         int countUserExists = countUserInfoByCondition(params);
         if (countUserExists > 0) {
-            throw new BusinessException(AppConstants.RES_FAIL_CODE, MessageUtils.getMessage(MessageConstants.MSG_ACCOUNT_ALREADY_EXISTS), 409);
+            throw new BusinessException(AppConstants.RES_DUPLICATE_CODE, MessageUtils.getMessage(MessageConstants.MSG_ACCOUNT_ALREADY_EXISTS));
         }
-        try {
-            UserInfo userInfo = new UserInfo();
-            userInfo.setRole(Role.USER);
-            userInfo.setStatus(Status.SECP.name());
-            userInfo.setEmail(userRegisterRequest.getEmail());
-            userInfo.setFullName(userRegisterRequest.getFullName());
-            userInfo.setPassword(passwordEncoder.encode(userRegisterRequest.getPassword()));
-            userInfoRepository.save(userInfo);
+        UserInfo userInfo = new UserInfo();
+        userInfo.setEmail(email);
+        userInfo.setRole(Role.USER);
+        userInfo.setFullName(fullName);
+        userInfo.setStatus(Status.SECP.name());
+        userInfo.setPassword(passwordEncoder.encode(userRegisterRequest.getPassword()));
+        userInfoRepository.save(userInfo);
 
-            long otpExpireMinutes = 0;
-            SystemParameter systemParameter = systemParameterService.getByTypeAndCode("OTP_TIME_OUT", "OTP");
-            MessageTemplate messageTemplate = messageTemplateService.getByTypeAndLanguage("UG001", LanguageUtils.getCurrentLanguage());
-            if (Objects.nonNull(systemParameter)) {
-                otpExpireMinutes = Long.parseLong(systemParameter.getValue());
-            }
-
-            params.clear();
-            String generateOtp = OtpUtils.generateOtp();
-            params.put("%otpNum%", generateOtp);
-            params.put("%fullName%", userInfo.getFullName());
-            params.put("%otpExpireMinutes%", otpExpireMinutes);
-            redisTemplate.opsForValue().set(userRegisterRequest.getEmail(), generateOtp, Duration.ofMinutes(otpExpireMinutes));
-
-            String title = messageTemplate.getTitle();
-            String content = StringUtils.messageReplace(messageTemplate.getContent(), params);
-            mailService.sendEmail(userInfo.getEmail(), title, content);
-
-            UserInfoResponse userInfoResponse = UserInfoResponse.builder()
-                    .email(userInfo.getEmail())
-                    .fullName(userInfo.getFullName())
-                    .status(MessageUtils.getMessage(MessageConstants.MSG_STATUS_SECP))
-                    .createdTime(DateTimeUtils.parseString(userInfo.getCreatedTime(), AppConstants.FORMAT_DATE_DD_MM_YYYY))
-                    .build();
-
-            return AppResponse.builder()
-                    .code(AppConstants.RES_SUCCESS_CODE)
-                    .message(MessageUtils.getMessage(MessageConstants.MSG_REGISTER_PENDING_ACTIVATION))
-                    .data(userInfoResponse)
-                    .build();
-        } catch (Exception ex) {
-            log.error(">>>UserInfoServiceImpl registerUser() ERROR", ex);
-            throw new BusinessException(AppConstants.RES_FAIL_CODE, MessageUtils.getMessage(MessageConstants.MSG_SYSTEM_ERROR), 500);
+        long otpExpireMinutes = 0;
+        SystemParameter systemParameter = systemParameterService.getByTypeAndCode("OTP_TIME_OUT", "OTP");
+        MessageTemplate messageTemplate = messageTemplateService.getByTypeAndLanguage("UG001", LanguageUtils.getCurrentLanguage());
+        if (Objects.nonNull(systemParameter)) {
+            otpExpireMinutes = Long.parseLong(systemParameter.getValue());
         }
+
+        params.clear();
+        String generateOtp = OtpUtils.generateOtp();
+        params.put("%fullName%", fullName);
+        params.put("%otpNum%", generateOtp);
+        params.put("%otpExpireMinutes%", otpExpireMinutes);
+        redisTemplate.opsForValue().set(email, generateOtp, Duration.ofMinutes(otpExpireMinutes));
+
+        String title = messageTemplate.getTitle();
+        String content = StringUtils.messageReplace(messageTemplate.getContent(), params);
+        mailService.sendEmail(email, title, content);
+
+        UserInfoResponse userInfoResponse = UserInfoResponse.builder()
+                .email(email)
+                .fullName(fullName)
+                .status(MessageUtils.getMessage(MessageConstants.MSG_STATUS_SECP))
+                .createdTime(DateTimeUtils.parseString(userInfo.getCreatedTime(), AppConstants.FORMAT_DATE_DD_MM_YYYY))
+                .build();
+
+        return AppResponse.builder()
+                .code(AppConstants.RES_SUCCESS_CODE)
+                .message(MessageUtils.getMessage(MessageConstants.MSG_REGISTER_PENDING_ACTIVATION))
+                .data(userInfoResponse)
+                .build();
     }
 
     @Override
     public AppResponse authentication(LoginRequest loginRequest) {
-        UserInfo userInfo = getUserInfoByEmail(loginRequest.getEmail());
+        String email = loginRequest.getEmail();
+        String password = loginRequest.getPassword();
+
+        UserInfo userInfo = getUserInfoByEmail(email);
         if (Status.SECP.name().equals(userInfo.getStatus())) {
-            throw new BusinessException(AppConstants.RES_FAIL_CODE, MessageUtils.getMessage(MessageConstants.MSG_ACCOUNT_NOT_ACTIVATED), 403);
+            throw new BusinessException(AppConstants.RES_FAIL_CODE, MessageUtils.getMessage(MessageConstants.MSG_ACCOUNT_NOT_ACTIVATED));
         }
         if (Status.DLTD.name().equals(userInfo.getStatus())) {
-            throw new BusinessException(AppConstants.RES_FAIL_CODE, MessageUtils.getMessage(MessageConstants.MSG_ACCOUNT_DELETED), 410);
+            throw new BusinessException(AppConstants.RES_FAIL_CODE, MessageUtils.getMessage(MessageConstants.MSG_ACCOUNT_DELETED));
         }
-        try {
-            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
-            CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
-            LoginResponse loginResponse = this.genTokenResponse(customUserDetails);
 
-            return AppResponse.builder()
-                    .code(AppConstants.RES_SUCCESS_CODE)
-                    .message(MessageUtils.getMessage(MessageConstants.MSG_LOGIN_SUCCESS))
-                    .data(loginResponse)
-                    .build();
-        } catch (Exception ex) {
-            log.error(">>>UserInfoServiceImpl authentication() ERROR", ex);
-            throw new BusinessException(AppConstants.RES_FAIL_CODE, MessageUtils.getMessage(MessageConstants.MSG_SYSTEM_ERROR), 500);
-        }
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
+        CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
+        LoginResponse loginResponse = this.genTokenResponse(customUserDetails);
+
+        return AppResponse.builder()
+                .code(AppConstants.RES_SUCCESS_CODE)
+                .message(MessageUtils.getMessage(MessageConstants.MSG_LOGIN_SUCCESS))
+                .data(loginResponse)
+                .build();
     }
 
     @Override
     public AppResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
         String refreshToken = refreshTokenRequest.getRefreshToken();
         if (!jwtUtils.validateRefreshToken(refreshToken)) {
-            throw new BusinessException(AppConstants.RES_INVALID_CODE, MessageUtils.getMessage(MessageConstants.MSG_REFRESH_TOKEN_INVALID), 400);
+            throw new BusinessException(AppConstants.RES_INVALID_CODE, MessageUtils.getMessage(MessageConstants.MSG_REFRESH_TOKEN_INVALID));
         }
 
         String email = jwtUtils.getUserMailFromRefreshToken(refreshToken);
@@ -163,9 +162,9 @@ public class UserInfoServiceImpl implements UserInfoService {
     }
 
     @Override
-    public AppResponse logout(LogoutRequest logoutRequest) {
+    public AppResponse logout() {
         Map<String, Object> params = new HashMap<>();
-        String token = logoutRequest.getToken();
+        String token = jwtUtils.getTokenHeader(request);
         if (jwtUtils.isTokenExpired(token)) {
             Map<String, Object> mapClaim = jwtUtils.getUserFromToken(token);
             params.put(FieldConstants.USER_ID, mapClaim.get("userId").toString());

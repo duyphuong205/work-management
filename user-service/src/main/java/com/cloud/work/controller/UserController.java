@@ -5,6 +5,7 @@ import com.cloud.work.dto.request.VerifyUserRequest;
 import com.cloud.work.dto.response.AppResponse;
 import com.cloud.work.service.OtpService;
 import com.cloud.work.service.UserInfoService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,13 +20,13 @@ public class UserController {
     private final OtpService otpService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> doSignup(@RequestBody UserRegisterRequest userRegisterRequest) {
+    public ResponseEntity<?> doSignup(@Valid @RequestBody UserRegisterRequest userRegisterRequest) {
         AppResponse appResponse = userInfoService.registerUser(userRegisterRequest);
         return new ResponseEntity<>(appResponse, HttpStatus.CREATED);
     }
 
     @PostMapping("/verify-otp")
-    public ResponseEntity<?> doVerifyOtp(@RequestBody VerifyUserRequest verifyUserRequest) {
+    public ResponseEntity<?> doVerifyOtp(@Valid @RequestBody VerifyUserRequest verifyUserRequest) {
         AppResponse appResponse = otpService.verifyOtp(verifyUserRequest);
         return new ResponseEntity<>(appResponse, HttpStatus.OK);
     }
