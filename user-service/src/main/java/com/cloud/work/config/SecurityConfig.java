@@ -36,7 +36,8 @@ public class SecurityConfig {
                         "/api/v1/auth",
                         "/api/v1/logout",
                         "/api/v1/refresh-token",
-                        "/api/v1/user/register"
+                        "/api/v1/user/register",
+                        "/api/v1/user/verify-otp"
                 ).permitAll().anyRequest().authenticated());
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
