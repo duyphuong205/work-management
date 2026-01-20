@@ -1,12 +1,12 @@
 package com.cloud.work.service;
 
-import com.cloud.work.dto.request.UserRegisterRequest;
-import com.cloud.work.dto.response.UserInfoResponse;
+import com.cloud.work.entity.UserInfo;
 
 import java.util.Map;
 
 public interface UserInfoService {
-    UserInfoResponse getUserInfoByEmail(String email);
-    UserInfoResponse registerUser(UserRegisterRequest userRegisterRequest);
-    int countUserInfoByCondition(Map<String, Object> params);
+    UserInfo create(UserInfo userInfo);
+    void updateStatusByEmail(String email, String status);
+    UserInfo getByEmail(String email);
+    int countByCondition(Map<String, Object> params);
 }

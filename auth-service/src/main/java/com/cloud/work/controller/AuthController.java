@@ -1,10 +1,9 @@
 package com.cloud.work.controller;
 
-import com.cloud.work.constants.MessageConstants;
 import com.cloud.work.dto.request.LoginRequest;
 import com.cloud.work.dto.request.RefreshTokenRequest;
 import com.cloud.work.dto.response.AppResponse;
-import com.cloud.work.service.AuthService;
+import com.cloud.work.facade.AuthFacade;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,23 +18,23 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
+    private final AuthFacade authFacade;
 
     @PostMapping("/auth")
     public ResponseEntity<?> doLogin(@Valid @RequestBody LoginRequest loginRequest) {
-        AppResponse appResponse = AppResponse.success(MessageConstants.MSG_LOGIN_SUCCESS, authService.login(loginRequest));
+        AppResponse appResponse = authFacade.login(loginRequest);
         return new ResponseEntity<>(appResponse, HttpStatus.OK);
     }
 
     @PostMapping("/refresh-token")
     public ResponseEntity<?> doRefreshToken(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
-        AppResponse appResponse = AppResponse.success(authService.refreshToken(refreshTokenRequest));
+        AppResponse appResponse = authFacade.refreshToken(refreshTokenRequest);
         return new ResponseEntity<>(appResponse, HttpStatus.OK);
     }
 
     @PostMapping("/logout")
     public ResponseEntity<?> doLogout() {
-        authService.logout();
-        return new ResponseEntity<>(AppResponse.success(), HttpStatus.OK);
+        AppResponse appResponse = authFacade.logout();
+        return new ResponseEntity<>(appResponse, HttpStatus.OK);
     }
 }

@@ -7,8 +7,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
-
 @Repository
 public interface UserInfoRepository extends JpaRepository<UserInfo, Long> {
     UserInfo findByEmail(String email);
@@ -16,5 +14,5 @@ public interface UserInfoRepository extends JpaRepository<UserInfo, Long> {
     @Modifying
     @Transactional
     @Query("UPDATE UserInfo u SET u.status = :status WHERE u.email = :email")
-    int updateStatusByEmail(String email, String status);
+    void updateStatusByEmail(String email, String status);
 }

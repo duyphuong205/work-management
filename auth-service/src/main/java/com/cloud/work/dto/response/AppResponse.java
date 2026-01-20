@@ -25,6 +25,13 @@ public class AppResponse implements Serializable {
                 .build();
     }
 
+    public static AppResponse success(String messageKey) {
+        return AppResponse.builder()
+                .code(AppConstants.RES_SUCCESS_CODE)
+                .message(MessageUtils.getMessage(messageKey))
+                .build();
+    }
+
     public static AppResponse success(Object data) {
         return AppResponse.builder()
                 .code(AppConstants.RES_SUCCESS_CODE)

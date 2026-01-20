@@ -1,4 +1,4 @@
-package com.cloud.work.service.impl;
+package com.cloud.work.facade;
 
 import com.cloud.work.client.UserServiceClient;
 import com.cloud.work.constants.AppConstants;
@@ -15,7 +15,6 @@ import com.cloud.work.exception.BusinessException;
 import com.cloud.work.jwt.JwtUtils;
 import com.cloud.work.security.CustomUserDetails;
 import com.cloud.work.security.CustomUserDetailsService;
-import com.cloud.work.service.AuthService;
 import com.cloud.work.service.TokenHistoryService;
 import com.cloud.work.utils.MessageUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,16 +25,16 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
-@Service
+@Component
 @RequiredArgsConstructor
-public class AuthServiceImpl implements AuthService {
+public class AuthFacade {
 
     private final JwtUtils jwtUtils;
     private final ObjectMapper objectMapper;
@@ -46,22 +45,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final CustomUserDetailsService customUserDetailsService;
 
-    @Override
-    public void logout() {
-        Map<String, Object> params = new HashMap<>();
-        String token = jwtUtils.getTokenHeader(request);
-        if (jwtUtils.isTokenExpired(token)) {
-            Map<String, Object> mapClaim = jwtUtils.getUserFromToken(token);
-            params.put(FieldConstants.USER_ID, mapClaim.get("userId").toString());
-            tokenHistoryService.expireToken(params);
-        }
-        Map<String, Object> mapClaim = jwtUtils.getUserFromToken(token);
-        params.put(FieldConstants.USER_ID, mapClaim.get("userId").toString());
-        tokenHistoryService.expireToken(params);
-    }
-
-    @Override
-    public LoginResponse login(LoginRequest loginRequest) {
+    public AppResponse login(LoginRequest loginRequest) {
         String email = loginRequest.getEmail();
         String password = loginRequest.getPassword();
 
@@ -82,18 +66,34 @@ public class AuthServiceImpl implements AuthService {
 
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
-        return this.genTokenResponse(customUserDetails);
+        LoginResponse loginResponse = this.genTokenResponse(customUserDetails);
+        return AppResponse.success(MessageConstants.MSG_LOGIN_SUCCESS, loginResponse);
     }
 
-    @Override
-    public LoginResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
+    public AppResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
         String refreshToken = refreshTokenRequest.getRefreshToken();
         if (!jwtUtils.validateRefreshToken(refreshToken)) {
             throw new BusinessException(AppConstants.RES_INVALID_CODE, MessageUtils.getMessage(MessageConstants.MSG_REFRESH_TOKEN_INVALID));
         }
         String email = jwtUtils.getUserMailFromRefreshToken(refreshToken);
         CustomUserDetails customUserDetails = (CustomUserDetails) customUserDetailsService.loadUserByUsername(email);
-        return this.genTokenResponse(customUserDetails);
+        LoginResponse loginResponse = this.genTokenResponse(customUserDetails);
+        return AppResponse.success(loginResponse);
+    }
+
+    public AppResponse logout() {
+        Map<String, Object> params = new HashMap<>();
+        String token = jwtUtils.getTokenHeader(request);
+        if (jwtUtils.isTokenExpired(token)) {
+            Map<String, Object> mapClaim = jwtUtils.getUserFromToken(token);
+            params.put(FieldConstants.USER_ID, mapClaim.get("userId").toString());
+            tokenHistoryService.expireToken(params);
+            return AppResponse.success(MessageConstants.MSG_LOGOUT_SUCCESS);
+        }
+        Map<String, Object> mapClaim = jwtUtils.getUserFromToken(token);
+        params.put(FieldConstants.USER_ID, mapClaim.get("userId").toString());
+        tokenHistoryService.expireToken(params);
+        return AppResponse.success(MessageConstants.MSG_LOGOUT_SUCCESS);
     }
 
     private LoginResponse genTokenResponse(CustomUserDetails customUserDetails) {
