@@ -1,18 +1,12 @@
 package com.cloud.work.service;
 
-import com.cloud.work.dto.request.LoginRequest;
-import com.cloud.work.dto.request.RefreshTokenRequest;
 import com.cloud.work.dto.request.UserRegisterRequest;
-import com.cloud.work.dto.response.AppResponse;
-import com.cloud.work.entity.UserInfo;
+import com.cloud.work.dto.response.UserInfoResponse;
 
 import java.util.Map;
 
 public interface UserInfoService {
-    UserInfo getUserInfoByEmail(String email);
-    AppResponse registerUser(UserRegisterRequest userRegisterRequest);
-    AppResponse authentication(LoginRequest loginRequest);
-    AppResponse refreshToken(RefreshTokenRequest refreshTokenRequest);
-    AppResponse logout();
+    UserInfoResponse getUserInfoByEmail(String email);
+    UserInfoResponse registerUser(UserRegisterRequest userRegisterRequest);
     int countUserInfoByCondition(Map<String, Object> params);
 }

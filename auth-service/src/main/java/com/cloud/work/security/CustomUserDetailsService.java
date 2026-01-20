@@ -1,11 +1,13 @@
 package com.cloud.work.security;
 
+import com.cloud.work.client.UserServiceClient;
 import com.cloud.work.constants.AppConstants;
 import com.cloud.work.constants.MessageConstants;
-import com.cloud.work.entity.UserInfo;
+import com.cloud.work.dto.response.AppResponse;
+import com.cloud.work.dto.response.UserInfoResponse;
 import com.cloud.work.exception.NotFoundException;
-import com.cloud.work.repository.UserInfoRepository;
 import com.cloud.work.utils.MessageUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -18,11 +20,13 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UserInfoRepository userInfoRepository;
+    private final ObjectMapper objectMapper;
+    private final UserServiceClient userServiceClient;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        UserInfo userInfo = userInfoRepository.findByEmail(email);
+        AppResponse appResponse = userServiceClient.getUserByEmail(email);
+        UserInfoResponse userInfo = objectMapper.convertValue(appResponse.getData(), UserInfoResponse.class);
         if (Objects.isNull(userInfo)) {
             throw new NotFoundException(AppConstants.RES_NOT_FOUND_CODE, MessageUtils.getMessage(MessageConstants.MSG_ACCOUNT_NOT_FOUND));
         }

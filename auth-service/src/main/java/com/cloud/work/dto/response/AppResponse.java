@@ -18,6 +18,13 @@ public class AppResponse implements Serializable {
     String message;
     Object data;
 
+    public static AppResponse success() {
+        return AppResponse.builder()
+                .code(AppConstants.RES_SUCCESS_CODE)
+                .message(MessageUtils.getMessage(MessageConstants.MSG_SUCCESS))
+                .build();
+    }
+
     public static AppResponse success(Object data) {
         return AppResponse.builder()
                 .code(AppConstants.RES_SUCCESS_CODE)

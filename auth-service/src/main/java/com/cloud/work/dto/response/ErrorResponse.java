@@ -5,7 +5,6 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
 
 @Data
 @Builder
@@ -13,12 +12,8 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class UserInfoResponse implements Serializable {
-    Long userId;
-    String role;
-    String email;
-    String status;
-    String fullName;
-    String password;
-    String createdTime;
+public class ErrorResponse implements Serializable {
+    String code;
+    String message;
+    Object data;
 }

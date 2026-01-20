@@ -1,8 +1,10 @@
 package com.cloud.work.controller;
 
+import com.cloud.work.constants.MessageConstants;
 import com.cloud.work.dto.request.UserRegisterRequest;
 import com.cloud.work.dto.request.VerifyUserRequest;
 import com.cloud.work.dto.response.AppResponse;
+import com.cloud.work.dto.response.UserInfoResponse;
 import com.cloud.work.service.OtpService;
 import com.cloud.work.service.UserInfoService;
 import jakarta.validation.Valid;
@@ -16,12 +18,19 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserInfoService userInfoService;
     private final OtpService otpService;
+    private final UserInfoService userInfoService;
+
+    @GetMapping("/find-by-email")
+    public ResponseEntity<?> doGetByEmail(@RequestParam String email) {
+        AppResponse appResponse = AppResponse.success(userInfoService.getUserInfoByEmail(email));
+        return new ResponseEntity<>(appResponse, HttpStatus.OK);
+    }
 
     @PostMapping("/register")
-    public ResponseEntity<?> doSignup(@Valid @RequestBody UserRegisterRequest userRegisterRequest) {
-        AppResponse appResponse = userInfoService.registerUser(userRegisterRequest);
+    public ResponseEntity<?> doRegister(@Valid @RequestBody UserRegisterRequest userRegisterRequest) {
+        UserInfoResponse userInfoResponse = userInfoService.registerUser(userRegisterRequest);
+        AppResponse appResponse = AppResponse.success(MessageConstants.MSG_REGISTER_PENDING_ACTIVATION, userInfoResponse);
         return new ResponseEntity<>(appResponse, HttpStatus.CREATED);
     }
 

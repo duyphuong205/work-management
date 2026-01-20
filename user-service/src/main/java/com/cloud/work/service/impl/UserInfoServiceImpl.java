@@ -1,45 +1,34 @@
 package com.cloud.work.service.impl;
 
 import com.cloud.work.constants.AppConstants;
-import com.cloud.work.constants.FieldConstants;
 import com.cloud.work.constants.MessageConstants;
-import com.cloud.work.dto.request.LoginRequest;
-import com.cloud.work.dto.request.RefreshTokenRequest;
 import com.cloud.work.dto.request.UserRegisterRequest;
-import com.cloud.work.dto.response.AppResponse;
-import com.cloud.work.dto.response.LoginResponse;
 import com.cloud.work.dto.response.UserInfoResponse;
 import com.cloud.work.entity.MessageTemplate;
 import com.cloud.work.entity.SystemParameter;
-import com.cloud.work.entity.TokenHistory;
 import com.cloud.work.entity.UserInfo;
 import com.cloud.work.enums.Role;
 import com.cloud.work.enums.Status;
 import com.cloud.work.exception.BusinessException;
 import com.cloud.work.exception.NotFoundException;
-import com.cloud.work.jwt.JwtUtils;
 import com.cloud.work.repository.UserInfoRepository;
-import com.cloud.work.security.CustomUserDetails;
-import com.cloud.work.security.CustomUserDetailsService;
-import com.cloud.work.service.*;
+import com.cloud.work.service.MailService;
+import com.cloud.work.service.MessageTemplateService;
+import com.cloud.work.service.SystemParameterService;
+import com.cloud.work.service.UserInfoService;
 import com.cloud.work.utils.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Timestamp;
 import java.time.Duration;
 import java.util.*;
 
@@ -49,27 +38,33 @@ import java.util.*;
 @Transactional(rollbackFor = Throwable.class)
 public class UserInfoServiceImpl implements UserInfoService {
 
-    private final JwtUtils jwtUtils;
     private final MailService mailService;
-    private final HttpServletRequest request;
     private final EntityManager entityManager;
     private final PasswordEncoder passwordEncoder;
     private final UserInfoRepository userInfoRepository;
-    private final TokenHistoryService tokenHistoryService;
-    private final AuthenticationManager authenticationManager;
     private final RedisTemplate<String, String> redisTemplate;
     private final SystemParameterService systemParameterService;
     private final MessageTemplateService messageTemplateService;
-    private final CustomUserDetailsService customUserDetailsService;
 
     @Override
-    public UserInfo getUserInfoByEmail(String email) {
-        return userInfoRepository.findByEmail(email).orElseThrow(() ->
-                new NotFoundException(AppConstants.RES_NOT_FOUND_CODE, MessageUtils.getMessage(MessageConstants.MSG_ACCOUNT_NOT_FOUND)));
+    public UserInfoResponse getUserInfoByEmail(String email) {
+        UserInfo userInfo = userInfoRepository.findByEmail(email);
+        if (Objects.isNull(userInfo)) {
+            throw new NotFoundException(AppConstants.RES_NOT_FOUND_CODE, MessageUtils.getMessage(MessageConstants.MSG_ACCOUNT_NOT_FOUND));
+        }
+        return UserInfoResponse.builder()
+                .email(email)
+                .userId(userInfo.getUserId())
+                .status(userInfo.getStatus())
+                .role(userInfo.getRole().name())
+                .fullName(userInfo.getFullName())
+                .password(userInfo.getPassword())
+                .createdTime(DateTimeUtils.parseString(userInfo.getCreatedTime(), AppConstants.FORMAT_DATE_DD_MM_YYYY))
+                .build();
     }
 
     @Override
-    public AppResponse registerUser(UserRegisterRequest userRegisterRequest) {
+    public UserInfoResponse registerUser(UserRegisterRequest userRegisterRequest) {
         String email = userRegisterRequest.getEmail();
         String fullName = userRegisterRequest.getFullName();
 
@@ -106,81 +101,11 @@ public class UserInfoServiceImpl implements UserInfoService {
         String content = StringUtils.messageReplace(messageTemplate.getContent(), params);
         mailService.sendEmail(email, title, content);
 
-        UserInfoResponse userInfoResponse = UserInfoResponse.builder()
+        return UserInfoResponse.builder()
                 .email(email)
                 .fullName(fullName)
                 .status(MessageUtils.getMessage(MessageConstants.MSG_STATUS_SECP))
                 .createdTime(DateTimeUtils.parseString(userInfo.getCreatedTime(), AppConstants.FORMAT_DATE_DD_MM_YYYY))
-                .build();
-
-        return AppResponse.builder()
-                .code(AppConstants.RES_SUCCESS_CODE)
-                .message(MessageUtils.getMessage(MessageConstants.MSG_REGISTER_PENDING_ACTIVATION))
-                .data(userInfoResponse)
-                .build();
-    }
-
-    @Override
-    public AppResponse authentication(LoginRequest loginRequest) {
-        String email = loginRequest.getEmail();
-        String password = loginRequest.getPassword();
-
-        UserInfo userInfo = getUserInfoByEmail(email);
-        if (Status.SECP.name().equals(userInfo.getStatus())) {
-            throw new BusinessException(AppConstants.RES_FAIL_CODE, MessageUtils.getMessage(MessageConstants.MSG_ACCOUNT_NOT_ACTIVATED));
-        }
-        if (Status.DLTD.name().equals(userInfo.getStatus())) {
-            throw new BusinessException(AppConstants.RES_FAIL_CODE, MessageUtils.getMessage(MessageConstants.MSG_ACCOUNT_DELETED));
-        }
-
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
-        CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
-        LoginResponse loginResponse = this.genTokenResponse(customUserDetails);
-
-        return AppResponse.builder()
-                .code(AppConstants.RES_SUCCESS_CODE)
-                .message(MessageUtils.getMessage(MessageConstants.MSG_LOGIN_SUCCESS))
-                .data(loginResponse)
-                .build();
-    }
-
-    @Override
-    public AppResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
-        String refreshToken = refreshTokenRequest.getRefreshToken();
-        if (!jwtUtils.validateRefreshToken(refreshToken)) {
-            throw new BusinessException(AppConstants.RES_INVALID_CODE, MessageUtils.getMessage(MessageConstants.MSG_REFRESH_TOKEN_INVALID));
-        }
-
-        String email = jwtUtils.getUserMailFromRefreshToken(refreshToken);
-        CustomUserDetails customUserDetails = (CustomUserDetails) customUserDetailsService.loadUserByUsername(email);
-        LoginResponse loginResponse = this.genTokenResponse(customUserDetails);
-        return AppResponse.builder()
-                .code(AppConstants.RES_SUCCESS_CODE)
-                .message(MessageUtils.getMessage(MessageConstants.MSG_SUCCESS))
-                .data(loginResponse)
-                .build();
-    }
-
-    @Override
-    public AppResponse logout() {
-        Map<String, Object> params = new HashMap<>();
-        String token = jwtUtils.getTokenHeader(request);
-        if (jwtUtils.isTokenExpired(token)) {
-            Map<String, Object> mapClaim = jwtUtils.getUserFromToken(token);
-            params.put(FieldConstants.USER_ID, mapClaim.get("userId").toString());
-            tokenHistoryService.expireToken(params);
-            return AppResponse.builder()
-                    .code(AppConstants.RES_SUCCESS_CODE)
-                    .message(MessageUtils.getMessage(MessageConstants.MSG_SUCCESS))
-                    .build();
-        }
-
-        Map<String, Object> mapClaim = jwtUtils.getUserFromToken(token);
-        params.put(FieldConstants.USER_ID, mapClaim.get("userId").toString());
-        tokenHistoryService.expireToken(params);
-        return AppResponse.builder()
-                .code(AppConstants.RES_SUCCESS_CODE)
-                .message(MessageUtils.getMessage(MessageConstants.MSG_LOGOUT_SUCCESS))
                 .build();
     }
 
@@ -201,30 +126,5 @@ public class UserInfoServiceImpl implements UserInfoService {
         cq.select(cb.count(root)).where(ps.toArray(new Predicate[0]));
         Long count = entityManager.createQuery(cq).getSingleResult();
         return Math.toIntExact(count);
-    }
-
-    private LoginResponse genTokenResponse(CustomUserDetails customUserDetails) {
-        Map<String, Object> resultMap = jwtUtils.generateToken(customUserDetails);
-        String token = resultMap.get("token").toString();
-        String refreshToken = resultMap.get("refreshToken").toString();
-        long expire = Long.parseLong(resultMap.get("expire").toString());
-        long refreshExpire = Long.parseLong(resultMap.get("refreshExpire").toString());
-        long userId = customUserDetails.getUserInfo().getUserId();
-
-        TokenHistory tokenHistory = new TokenHistory();
-        tokenHistory.setUserId(userId);
-        tokenHistory.setToken(token);
-        tokenHistory.setRefreshToken(refreshToken);
-        tokenHistory.setExpireTime(new Timestamp(expire));
-        tokenHistory.setRefreshExpireTime(new Timestamp(refreshExpire));
-        tokenHistory.setStatus(Status.NEWR.name());
-        tokenHistoryService.insert(tokenHistory);
-
-        return LoginResponse.builder()
-                .accessToken(token)
-                .refreshToken(refreshToken)
-                .expireAccessToken(expire)
-                .expireRefreshToken(refreshExpire)
-                .build();
     }
 }

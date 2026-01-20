@@ -1,5 +1,6 @@
 package com.cloud.work.jwt;
 
+import com.cloud.work.service.TokenHistoryService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,6 +25,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
     private final UserDetailsService userDetailsService;
+    private final TokenHistoryService tokenHistoryService;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -34,11 +36,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (jwt != null) {
                 boolean isValid = jwtUtils.validateToken(jwt);
                 if (isValid) {
-                    String email = jwtUtils.getUserMailFromJwt(jwt);
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                    auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(auth);
+                    boolean isValidDB = tokenHistoryService.isValidToken(jwt);
+                    if (isValidDB) {
+                        String email = jwtUtils.getUserMailFromJwt(jwt);
+                        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+                        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                        auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(auth);
+                    }
                 }
             }
         } catch (Exception e) {

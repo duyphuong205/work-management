@@ -6,5 +6,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TokenHistoryRepository extends JpaRepository<TokenHistory, Long> {
-    long countByToken(String token);
 }

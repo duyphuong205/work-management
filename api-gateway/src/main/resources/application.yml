@@ -9,10 +9,14 @@ spring:
     gateway:
       mvc:
         routes:
+          - id: auth-service
+            uri: ${BASE_URL_AUTH_SVC}
+            predicates:
+              - Path=/api/v1/auth,/api/v1/logout,/api/v1/refresh-token
           - id: user-service
             uri: ${BASE_URL_USER_SVC}
             predicates:
-              - Path=/api/v1/users/**
+              - Path=/api/v1/user/**
           - id: group-service
             uri: ${BASE_URL_GROUP_SVC}
             predicates:
@@ -24,4 +28,4 @@ spring:
           - id: notification-service
             uri: ${BASE_URL_NOTIFICATION_SVC}
             predicates:
-              - Path=/api/v1/notifications/**ád
+              - Path=/api/v1/notifications/**
