@@ -7,7 +7,7 @@ create table user_info (
     status varchar(4),
     created_by bigint,
     created_time timestamp,
-    update_by bigint,
-    update_time timestamp,
+    updated_by bigint,
+    updated_time timestamp,
     primary key(user_id)
 );

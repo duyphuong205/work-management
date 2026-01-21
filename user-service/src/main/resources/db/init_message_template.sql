@@ -7,14 +7,14 @@ create table message_template (
     language varchar(5),
     created_by bigint,
     created_time timestamp,
-    update_by bigint,
-    update_time timestamp,
+    updated_by bigint,
+    updated_time timestamp,
     primary key(template_id)
 );
 
 --Mail xác thực khi đăng ký người dùng
 INSERT INTO message_template
-(template_id, type, title, content, status, language, created_by, created_time, update_by, update_time)
+(template_id, type, title, content, status, language, created_by, created_time, updated_by, updated_time)
 VALUES(1, 'UG001', N'Mã xác minh đăng ký tài khoản', '<body style="margin:0; padding:0; background:#f3f5f7; font-family: Arial, Helvetica, sans-serif;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
         style="background:#f3f5f7; padding:24px 0;">

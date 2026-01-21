@@ -17,10 +17,10 @@ spring:
             uri: ${BASE_URL_USER_SVC}
             predicates:
               - Path=/api/v1/user/**
-          - id: group-service
-            uri: ${BASE_URL_GROUP_SVC}
+          - id: project-service
+            uri: ${BASE_URL_PROJECT_SVC}
             predicates:
-              - Path=/api/v1/groups/**
+              - Path=/api/v1/projects/**
           - id: task-service
             uri: ${BASE_URL_TASK_SVC}
             predicates:
