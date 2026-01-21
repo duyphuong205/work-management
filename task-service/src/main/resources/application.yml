@@ -1,5 +1,7 @@
 server:
   port: 3333
+  servlet:
+    context-path: /task-service/api/v1
 
 spring:
   application:
@@ -19,6 +21,14 @@ spring:
 mybatis:
   config-location: classpath:mybatis/mybatis-config.xml
   mapper-locations: classpath:mybatis/mappers/*.xml
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui
+    operationsSorter: method
+    tagsSorter: alpha
+  api-docs:
+    path: /v3/api-docs
 
 logging:
   level:
