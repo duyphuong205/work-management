@@ -1,5 +1,7 @@
 server:
   port: 2222
+  servlet:
+    context-path: /project-service/api/v1
 
 spring:
   application:
@@ -21,6 +23,14 @@ spring:
     hibernate:
       ddl-auto: ${SERVER_DATASOURCE_DDL}
     show-sql: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui
+    operationsSorter: method
+    tagsSorter: alpha
+  api-docs:
+    path: /v3/api-docs
 
 logging:
   level:
