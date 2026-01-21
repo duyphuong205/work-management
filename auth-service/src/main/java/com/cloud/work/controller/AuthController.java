@@ -14,13 +14,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
     private final AuthFacade authFacade;
 
-    @PostMapping("/auth")
+    @PostMapping("/login")
     public ResponseEntity<?> doLogin(@Valid @RequestBody LoginRequest loginRequest) {
         AppResponse appResponse = authFacade.login(loginRequest);
         return new ResponseEntity<>(appResponse, HttpStatus.OK);

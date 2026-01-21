@@ -1,5 +1,7 @@
 server:
   port: 5555
+  servlet:
+    context-path: /auth-service/api/v1
 
 spring:
   application:
@@ -32,6 +34,14 @@ app:
     refresh:
       token:
         expiration: ${SERVER_JWT_REFRESH_TOKEN_EXPIRATION}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui
+    operationsSorter: method
+    tagsSorter: alpha
+  api-docs:
+    path: /v3/api-docs
 
 logging:
   level:
