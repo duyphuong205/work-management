@@ -1,5 +1,6 @@
 package com.cloud.work.service.impl;
 
+import com.cloud.work.dto.request.CreateProjectRequest;
 import com.cloud.work.entity.ProjectInfo;
 import com.cloud.work.repository.ProjectInfoRepository;
 import com.cloud.work.service.ProjectInfoService;
@@ -22,4 +23,27 @@ public class ProjectInfoServiceImpl implements ProjectInfoService {
     public List<ProjectInfo> findAll() {
         return projectInfoRepository.findAll();
     }
+
+    @Override
+    public ProjectInfo createNewProject(ProjectInfo projectInfo) {
+        projectInfoRepository.save(projectInfo);
+        return projectInfo;
+    }
+
+    @Override
+    public boolean existsByName(String name) {
+        return projectInfoRepository.existsByName(name);
+    }
+
+    @Override
+    public void updateStatusById(Long id, String status) {
+        projectInfoRepository.updateStatusById(id,status);
+    }
+
+    @Override
+    public void updateNameBoard(Long id, CreateProjectRequest createProjectRequest) {
+        projectInfoRepository.updateNameById(id, createProjectRequest.getName());
+    }
+
+
 }

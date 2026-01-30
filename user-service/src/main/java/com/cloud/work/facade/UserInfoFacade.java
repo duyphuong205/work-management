@@ -41,6 +41,8 @@ public class UserInfoFacade {
     private final MessageTemplateService messageTemplateService;
 
     public AppResponse register(UserRegisterRequest userRegisterRequest) {
+        UserInfo userInfo = new UserInfo();
+
         String email = userRegisterRequest.getEmail();
         String fullName = userRegisterRequest.getFullName();
 
@@ -51,7 +53,6 @@ public class UserInfoFacade {
         if (countUserExists > 0) {
             throw new BusinessException(AppConstants.RES_DUPLICATE_CODE, MessageUtils.getMessage(MessageConstants.MSG_ACCOUNT_ALREADY_EXISTS));
         }
-        UserInfo userInfo = new UserInfo();
         userInfo.setEmail(email);
         userInfo.setRole(Role.USER);
         userInfo.setFullName(fullName);

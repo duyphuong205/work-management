@@ -1,5 +1,8 @@
 package com.cloud.work.service.impl;
 
+import com.cloud.work.entity.ProjectMemberInfo;
+import com.cloud.work.repository.ProjectInfoRepository;
+import com.cloud.work.repository.ProjectMemberInfoRepository;
 import com.cloud.work.service.ProjectMemberInfoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,4 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(rollbackFor = Throwable.class)
 public class ProjectMemberInfoServiceImpl implements ProjectMemberInfoService {
+    private final ProjectMemberInfoRepository projectMemberInfoRepository;
+    @Override
+    public void createProjectMember(ProjectMemberInfo projectMemberInfo) {
+        projectMemberInfoRepository.save(projectMemberInfo);
+    }
 }
