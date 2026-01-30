@@ -1,6 +1,5 @@
 package com.cloud.work.service.impl;
 
-import com.cloud.work.dto.request.CreateProjectRequest;
 import com.cloud.work.entity.ProjectInfo;
 import com.cloud.work.repository.ProjectInfoRepository;
 import com.cloud.work.service.ProjectInfoService;
@@ -25,9 +24,8 @@ public class ProjectInfoServiceImpl implements ProjectInfoService {
     }
 
     @Override
-    public ProjectInfo createNewProject(ProjectInfo projectInfo) {
-        projectInfoRepository.save(projectInfo);
-        return projectInfo;
+    public ProjectInfo create(ProjectInfo projectInfo) {
+        return projectInfoRepository.save(projectInfo);
     }
 
     @Override
@@ -41,9 +39,12 @@ public class ProjectInfoServiceImpl implements ProjectInfoService {
     }
 
     @Override
-    public void updateNameBoard(Long id, CreateProjectRequest createProjectRequest) {
-        projectInfoRepository.updateNameById(id, createProjectRequest.getName());
+    public ProjectInfo update(ProjectInfo projectInfo) {
+        return projectInfoRepository.save(projectInfo);
     }
 
-
+    @Override
+    public ProjectInfo getById(Long projectId) {
+        return projectInfoRepository.findById(projectId).get();
+    }
 }

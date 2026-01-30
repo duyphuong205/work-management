@@ -11,7 +11,8 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CreateProjectRequest implements Serializable {
+public class UpdateProjectRequest implements Serializable {
+    Long projectId;
     @NotBlank(message = "{msg.project.name.not.blank}")
     String name;
 }

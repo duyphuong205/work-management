@@ -3,7 +3,11 @@ package com.cloud.work.facade;
 import com.cloud.work.constants.AppConstants;
 import com.cloud.work.constants.MessageConstants;
 import com.cloud.work.dto.request.CreateProjectRequest;
+import com.cloud.work.dto.request.UpdateProjectRequest;
 import com.cloud.work.dto.response.AppResponse;
+import com.cloud.work.dto.response.CreateProjectResponse;
+import com.cloud.work.dto.response.ProjectInfoResponse;
+import com.cloud.work.dto.response.UpdateProjectResponse;
 import com.cloud.work.entity.ProjectInfo;
 import com.cloud.work.entity.ProjectMemberInfo;
 import com.cloud.work.enums.Role;
@@ -12,54 +16,58 @@ import com.cloud.work.exception.BusinessException;
 import com.cloud.work.service.ProjectInfoService;
 import com.cloud.work.service.ProjectMemberInfoService;
 import com.cloud.work.utils.MessageUtils;
+import com.cloud.work.utils.ObjectConvertUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class ProjectInfoFacade {
+
     private final ProjectInfoService projectInfoService;
     private final ProjectMemberInfoService projectMemberInfoService;
 
-    public AppResponse createNewProject (CreateProjectRequest createProjectRequest){
-        Timestamp createdTime = Timestamp.valueOf(
-                LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
-        ProjectInfo projectInfo = new ProjectInfo();
-        ProjectMemberInfo projectMemberInfo = new ProjectMemberInfo();
-        String getName = createProjectRequest.getName();
-        boolean checkName = projectInfoService.existsByName(getName);
-
-        if(checkName){
-            throw new BusinessException(AppConstants.RES_FAIL_CODE, MessageUtils.getMessage(MessageConstants.MSG_Create_Board_SUCCESS));
+    public AppResponse createProject(CreateProjectRequest createProjectRequest) {
+        String name = createProjectRequest.getName().trim();
+        boolean isExists = projectInfoService.existsByName(name);
+        if (isExists) {
+            throw new BusinessException(AppConstants.RES_DUPLICATE_CODE, MessageUtils.getMessage(MessageConstants.MSG_PROJECT_ALREADY_EXISTS));
         }
 
-        projectInfo.setName(createProjectRequest.getName());
-        projectInfo.setStatus(Status.ACTV.name());
+        ProjectInfo projectInfo = new ProjectInfo();
+        projectInfo.setName(name);
         projectInfo.setOwnerId(2L);
-        projectInfo.setCreatedTime(createdTime);
-        ProjectInfo save = projectInfoService.createNewProject(projectInfo);
-        projectMemberInfo.setProjectId(save.getProjectId());
+        projectInfo.setStatus(Status.ACTV.name());
+        projectInfoService.create(projectInfo);
+
+        ProjectMemberInfo projectMemberInfo = new ProjectMemberInfo();
+        projectMemberInfo.setProjectId(projectInfo.getProjectId());
         projectMemberInfo.setRole(Role.OWNER);
-        projectMemberInfo.setCreatedTime(createdTime);
         projectMemberInfoService.createProjectMember(projectMemberInfo);
-        return AppResponse.success(MessageConstants.MSG_REGISTER_PENDING_ACTIVATION, projectInfo);
+
+        CreateProjectResponse createProjectResponse = ObjectConvertUtils.convertToDTO(projectInfo, CreateProjectResponse.class);
+        return AppResponse.success(MessageConstants.MSG_CREATE_PROJECT_SUCCESS, createProjectResponse);
     }
 
     public AppResponse deleteProject(Long id) {
         projectInfoService.updateStatusById(id, Status.DLTD.name());
-        return AppResponse.builder().code("200").message(MessageUtils.getMessage(MessageConstants.MSG_Delete_Board_SUCCESS)).build();
+        return AppResponse.success(MessageConstants.MSG_DELETE_PROJECT_SUCCESS);
     }
 
-    public AppResponse updateNameBoard(Long id, CreateProjectRequest createProjectRequest) {
+    public AppResponse getProjectInfoById(Long id) {
+        ProjectInfo projectInfo = projectInfoService.getById(id);
+        ProjectInfoResponse projectInfoResponse = ObjectConvertUtils.convertToDTO(projectInfo, ProjectInfoResponse.class);
+        return AppResponse.success(projectInfoResponse);
+    }
 
-        projectInfoService.updateNameBoard(id,createProjectRequest);
-        return AppResponse.builder().code("200").message(MessageUtils.getMessage(MessageConstants.MSG_Delete_Board_SUCCESS)).build();
+    public AppResponse updateProject(UpdateProjectRequest updateProjectRequest) {
+        ProjectInfo projectInfo = projectInfoService.getById(updateProjectRequest.getProjectId());
+        projectInfo.setName(updateProjectRequest.getName());
+        projectInfoService.update(projectInfo);
 
+        UpdateProjectResponse updateProjectResponse = ObjectConvertUtils.convertToDTO(projectInfo, UpdateProjectResponse.class);
+        return AppResponse.success(MessageConstants.MSG_UPDATE_PROJECT_SUCCESS, updateProjectResponse);
     }
 }

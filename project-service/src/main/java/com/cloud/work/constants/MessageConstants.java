@@ -39,13 +39,13 @@ public class MessageConstants {
     public static final String MSG_VERIFY_OTP_EXPIRED                           = "msg.verify.otp.expired";
     public static final String MSG_VERIFY_OTP_INVALID                           = "msg.verify.otp.invalid";
     public static final String MSG_VERIFY_ACCOUNT_SUCCESS                       = "msg.verify.account.success";
-    // Create Board
-    public static final String MSG_Create_Board_SUCCESS                       = "msg.verify.account.success";
-
 
     //Validation field
-    public static final String MSG_INVALID_INPUT_DATA                          = "msg.invalid.input.data";
+    public static final String MSG_INVALID_INPUT_DATA                           = "msg.invalid.input.data";
 
-    // Delete Board
-    public static final String MSG_Delete_Board_SUCCESS                         ="msg.verify.account.success";
+    //Project
+    public static final String MSG_CREATE_PROJECT_SUCCESS                       = "msg.create.project.success";
+    public static final String MSG_UPDATE_PROJECT_SUCCESS                       = "msg.update.project.success";
+    public static final String MSG_DELETE_PROJECT_SUCCESS                       = "msg.delete.project.success";
+    public static final String MSG_PROJECT_ALREADY_EXISTS                       = "msg.project.already.exists";
 }

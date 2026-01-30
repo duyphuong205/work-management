@@ -1,6 +1,5 @@
-package com.cloud.work.dto.request;
+package com.cloud.work.dto.response;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -11,7 +10,9 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CreateProjectRequest implements Serializable {
-    @NotBlank(message = "{msg.project.name.not.blank}")
+public class ProjectInfoResponse implements Serializable {
+    Long projectId;
     String name;
+    String status;
+    String createdTime;
 }
