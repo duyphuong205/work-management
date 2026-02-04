@@ -5,6 +5,7 @@ import com.cloud.work.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.sql.Timestamp;
 
@@ -24,13 +25,14 @@ public class ProjectMemberInfo extends BaseEntity {
     @Column(name = "project_id")
     Long projectId;
 
-    @Column(name = "user_id")
-    Long userId;
+    @Column(name = "email")
+    String email;
 
     @Column(name = "role")
     @Enumerated(EnumType.STRING)
     Role role;
 
-    @Column(name = "joined_date")
+    @CreationTimestamp
+    @Column(name = "joined_date", updatable = false)
     Timestamp joinedDate;
 }
